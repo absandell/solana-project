@@ -1,18 +1,23 @@
+import { PublicKey, Transaction } from "@solana/web3.js";
 import { FC, useEffect, useState } from "react";
-import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
+import TransferSol from './TransferSol';
 
 
 type PhantomEvent = "disconnect" | "connect" | "accountChanged";
 
-interface ConnectOpts {
+interface ConnectOpts { // Interface for connecting wallet
     onlyIfTrusted: boolean;
 }
 
-interface PhantomProvider {
+export interface PhantomProvider { // Export interface for Phantom wallet
+    // Get PublicKey promise if ConnectOpts is trusted
     connect: (opts?: Partial<ConnectOpts>) => Promise<{ publicKey: PublicKey }>;
+    // On disconnect, promise is void
     disconnect: ()=>Promise<void>;
     on: (event: PhantomEvent, callback: (args:any)=>void) => void;
     isPhantom: boolean;
+    publicKey: PublicKey;
+    signTransaction: (t: Transaction) => {}
 }
 
 type WindowWithSolana = Window & { 
@@ -20,14 +25,11 @@ type WindowWithSolana = Window & {
 }
 
 
-
-const Connect2Phantom: FC = () => {
+const ConnectWallet: FC = () => {
 
     const [ walletAvail, setWalletAvail ] = useState(false);
     const [ provider, setProvider ] = useState<PhantomProvider | null>(null);
     const [ connected, setConnected ] = useState(false);
-    const [ pubKey, setPubKey ] = useState<PublicKey | null>(null);
-
 
     useEffect( ()=>{
         if ("solana" in window) {
@@ -45,16 +47,12 @@ const Connect2Phantom: FC = () => {
         provider?.on("connect", (publicKey: PublicKey)=>{ 
             console.log(`connect event: ${publicKey}`);
             setConnected(true); 
-            setPubKey(publicKey);
         });
         provider?.on("disconnect", ()=>{ 
             console.log("disconnect event");
             setConnected(false); 
-            setPubKey(null);
         });
-
     }, [provider]);
-
 
     const connectHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         console.log(`connect handler`);
@@ -74,7 +72,8 @@ const Connect2Phantom: FC = () => {
                 <>
                 <button disabled={connected} onClick={connectHandler}>Connect to Phantom</button>
                 <button disabled={!connected} onClick={disconnectHandler}>Disconnect from Phantom</button>
-                { connected ? <p>Your public key is : {pubKey?.toBase58()}</p> : null }
+                <hr/>
+                { connected && provider ? <TransferSol provider={provider} /> : null }
                 </>
             :
                 <>
@@ -85,4 +84,4 @@ const Connect2Phantom: FC = () => {
     );
 }
 
-export default Connect2Phantom;
+export default ConnectWallet;

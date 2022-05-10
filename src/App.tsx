@@ -1,6 +1,6 @@
 import React from 'react'
 import './App.css';
-import Connect2Phantom from './components/Connect2Phantom'
+import Connect2Phantom from './components/ConnectWallet'
 
 function App() {
   return (
